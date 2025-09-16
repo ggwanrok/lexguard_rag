@@ -1,0 +1,121 @@
+text,category,subcategory,role_applicability,contract_type,jurisdiction,clause_type,identifier,title,source,version,is_reference,quality,tags,recommended_language,notes
+"배상책임의 총한도는 최근 12개월 지급수수료를 초과하지 않으며, 간접·특별·결과적 손해는 제외한다.",LimitationOfLiability,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+"개인정보침해, 고의·중과실, 제3자 지식재산권 침해에 대해서는 총한도 적용을 배제한다.",LimitationOfLiability,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+배상책임에는 어떠한 제한도 없으며 모든 유형의 손해를 전부 배상한다.,LimitationOfLiability,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","총한도는 최근 6개월 지급수수료로 하고, 서비스 크레딧을 우선 구제로 제공한다.",
+간접손해 제외 없이 모든 손해를 제한 없이 포함한다.,LimitationOfLiability,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","총한도는 최근 6개월 지급수수료로 하고, 서비스 크레딧을 우선 구제로 제공한다.",variant
+"총한도는 최근 6개월 지급수수료로 하고, 서비스 크레딧을 우선 구제로 제공한다.",LimitationOfLiability,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+제3자 지식재산권 침해 주장에 대해 제공자는 방어·합의 통제권을 갖고 수령자는 합리적으로 협조한다.,Indemnity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+면책은 수령인의 지침 위반 또는 허용되지 않은 사용에는 적용되지 않는다.,Indemnity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+수령인은 본 계약과 관련된 모든 청구로부터 제공자를 무조건 면책한다.,Indemnity,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","면책 범위는 최종 확정판결 또는 서면 합의금으로 한정하고, 간접손해는 제외한다.",
+면책 범위에 당사자의 과실이 포함되더라도 제한 없이 면책한다.,Indemnity,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","면책 범위는 최종 확정판결 또는 서면 합의금으로 한정하고, 간접손해는 제외한다.",variant
+"면책 범위는 최종 확정판결 또는 서면 합의금으로 한정하고, 간접손해는 제외한다.",Indemnity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"본 계약의 준거법은 대한민국 법으로 하고, 분쟁은 서울중앙지방법원을 전속 관할로 한다.",GoverningLaw_Jurisdiction,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+"분쟁은 대한상사중재원 규칙에 따른 중재로 해결하며, 중재지는 서울, 절차언어는 한국어로 한다.",GoverningLaw_Jurisdiction,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+분쟁은 각 당사자의 소재지 법원에서 해결한다.,GoverningLaw_Jurisdiction,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","준거법은 한국법으로 하고, 관할은 상호 합의된 중재기관으로 정한다.",
+준거법과 관할을 명시하지 않는다.,GoverningLaw_Jurisdiction,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","준거법은 한국법으로 하고, 관할은 상호 합의된 중재기관으로 정한다.",variant
+"준거법은 한국법으로 하고, 관할은 상호 합의된 중재기관으로 정한다.",GoverningLaw_Jurisdiction,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"통지는 수신 확인 가능한 이메일 또는 등기우편으로 하고, 이메일 송신 후 2영업일 경과 시 수령된 것으로 본다.",Notice,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+통지처 변경은 서면으로 업데이트해야 한다.,Notice,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+통지는 팩스만 가능하며 당일 도달로 간주한다.,Notice,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","포털 알림과 이메일을 병행하며, 시스템 장애 시 등기우편을 사용한다.",
+통지 수단을 특정하지 않는다.,Notice,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","포털 알림과 이메일을 병행하며, 시스템 장애 시 등기우편을 사용한다.",variant
+"포털 알림과 이메일을 병행하며, 시스템 장애 시 등기우편을 사용한다.",Notice,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+권리·의무의 양도는 사전 서면동의 없이는 불가하다.,Assignment,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+지배권 변경 또는 계열사 간 이전은 예외로 허용하되 양수인은 동일한 의무를 승계한다.,Assignment,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+상대방 동의 없이 자유롭게 양도할 수 있다.,Assignment,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","양도는 동의를 요하되, 동의는 합리적 사유 없이 지연·거절하지 않는다.",
+어떠한 경우에도 양도할 수 없다.,Assignment,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad","양도는 동의를 요하되, 동의는 합리적 사유 없이 지연·거절하지 않는다.",variant
+"양도는 동의를 요하되, 동의는 합리적 사유 없이 지연·거절하지 않는다.",Assignment,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"천재지변, 정부 규제, 대규모 장애 등 불가항력 시 의무 이행이 면책되며 지체 없이 통지한다.",ForceMajeure,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+불가항력 종료 후 합리적 기간 내 이행을 재개한다.,ForceMajeure,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+불가항력의 범위를 제한 없이 광범위하게 정의한다.,ForceMajeure,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",장기 지속 시 어느 일방은 서면 통지로 계약 해지할 수 있다.,
+불가항력 사유라도 통지 의무가 없다.,ForceMajeure,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",장기 지속 시 어느 일방은 서면 통지로 계약 해지할 수 있다.,variant
+장기 지속 시 어느 일방은 서면 통지로 계약 해지할 수 있다.,ForceMajeure,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"비밀정보에는 서면·전자·구두 정보가 포함되며, 구두 제공 시 10~15일 내 서면 요약 통지한다.",Definition_ConfidentialInfo,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+"공개정보, 독자개발, 적법한 제3자 제공 정보 등은 예외로 한다.",Definition_ConfidentialInfo,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+비밀 표시된 서면만 비밀정보로 인정한다.,Definition_ConfidentialInfo,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",구두 정보는 즉시 비밀로 취급하되 15일 내 요약본을 제공한다.,
+구두 또는 관찰로 제공된 정보는 비밀이 아니다.,Definition_ConfidentialInfo,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",구두 정보는 즉시 비밀로 취급하되 15일 내 요약본을 제공한다.,variant
+구두 정보는 즉시 비밀로 취급하되 15일 내 요약본을 제공한다.,Definition_ConfidentialInfo,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+비밀정보는 계약 목적 달성을 위해서만 사용하며 필요 최소 범위로 공유한다.,UseAndPurpose,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+알아야 할 필요가 있는 인원으로 접근을 제한한다.,UseAndPurpose,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+비밀정보를 당사자의 모든 사업 목적에 자유롭게 사용할 수 있다.,UseAndPurpose,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",평가 및 계획 수립 목적까지만 사용하고 상용화는 사전 서면 동의를 요한다.,
+사전 동의 없이 제3자에게 재공유할 수 있다.,UseAndPurpose,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",평가 및 계획 수립 목적까지만 사용하고 상용화는 사전 서면 동의를 요한다.,variant
+평가 및 계획 수립 목적까지만 사용하고 상용화는 사전 서면 동의를 요한다.,UseAndPurpose,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"수신 전 보유 정보, 공개정보, 적법한 제3자 제공 정보, 독자 개발 정보는 비밀에서 제외된다.",Exclusions,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+"수신 전 보유 정보, 공개정보, 적법한 제3자 제공 정보, 독자 개발 정보는 비밀에서 제외된다. (필요 시 추가 통제 적용).",Exclusions,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+모든 정보를 비밀로 보며 예외를 두지 않는다.,Exclusions,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",예외 적용 시 합리적 입증자료를 보관한다.,
+모든 정보를 비밀로 보며 예외를 두지 않는다. (명시적 제한 부재).,Exclusions,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",예외 적용 시 합리적 입증자료를 보관한다.,variant
+예외 적용 시 합리적 입증자료를 보관한다.,Exclusions,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"종료 시 비밀정보를 반환 또는 파기하며, 파기 증명서를 제공한다.",Term_ReturnDestruction,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+백업 및 법적 보존 사본은 정책에 따라 관리한다.,Term_ReturnDestruction,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+모든 사본을 즉시 완전 삭제하고 예외를 인정하지 않는다.,Term_ReturnDestruction,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",30일 내 파기하고 기술적으로 불가능한 사본은 접근을 차단한다.,
+반환 요청이 있어도 자료를 보유할 수 있다.,Term_ReturnDestruction,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",30일 내 파기하고 기술적으로 불가능한 사본은 접근을 차단한다.,variant
+30일 내 파기하고 기술적으로 불가능한 사본은 접근을 차단한다.,Term_ReturnDestruction,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+비밀유지의무 위반 시 금지명령 또는 특정이행을 구할 수 있다.,InjunctiveRelief,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+비밀유지의무 위반 시 금지명령 또는 특정이행을 구할 수 있다. (필요 시 추가 통제 적용).,InjunctiveRelief,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+특별구제 수단을 명시하지 않는다.,InjunctiveRelief,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",양 당사자는 필요한 범위에서 비금전적 구제를 인정한다.,
+특별구제 수단을 명시하지 않는다. (명시적 제한 부재).,InjunctiveRelief,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",양 당사자는 필요한 범위에서 비금전적 구제를 인정한다.,variant
+양 당사자는 필요한 범위에서 비금전적 구제를 인정한다.,InjunctiveRelief,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"잔존지식 예외는 기억에 의한 일반적 정보로 한정하고, 비밀정보 자체의 사용·재현은 금지한다.",Residuals,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+"잔존지식 예외는 기억에 의한 일반적 정보로 한정하고, 비밀정보 자체의 사용·재현은 금지한다. (필요 시 추가 통제 적용).",Residuals,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+잔존지식 예외를 문서·코드 재현까지 포함해 광범위하게 인정한다.,Residuals,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",잔존지식 예외를 허용하되 특허·저작권 침해가 없도록 제한한다.,
+잔존지식 예외를 문서·코드 재현까지 포함해 광범위하게 인정한다. (명시적 제한 부재).,Residuals,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",잔존지식 예외를 허용하되 특허·저작권 침해가 없도록 제한한다.,variant
+잔존지식 예외를 허용하되 특허·저작권 침해가 없도록 제한한다.,Residuals,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+"접근통제, 암호화, 로그, 교육 등 합리적 보안조치를 유지한다.",RecipientSecurity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+보안 사고 발생 시 지체 없이 통지하고 개선한다.,RecipientSecurity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+보안 수준에 관한 의무를 두지 않는다.,RecipientSecurity,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",국제 인증 또는 동등한 보안 표준을 준거로 한다.,
+비밀번호 공유 등 취약한 관리도 허용한다.,RecipientSecurity,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",국제 인증 또는 동등한 보안 표준을 준거로 한다.,variant
+국제 인증 또는 동등한 보안 표준을 준거로 한다.,RecipientSecurity,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+계열사·자문사·하도급사에는 need-to-know 원칙 하에 공유하며 동일한 비밀유지의무를 부과한다.,PermittedReceivers,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+수신자 목록을 관리하고 접근을 통제한다.,PermittedReceivers,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+수신자 범위를 제한하지 않고 자유롭게 재공유할 수 있다.,PermittedReceivers,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",특정 범주의 제3자에게만 사전 승인 하에 공유를 허용한다.,
+하도급사에 대한 다운스트림 의무를 부과하지 않는다.,PermittedReceivers,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",특정 범주의 제3자에게만 사전 승인 하에 공유를 허용한다.,variant
+특정 범주의 제3자에게만 사전 승인 하에 공유를 허용한다.,PermittedReceivers,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+법적 요구 시 가능한 한 신속히 통지하고 보호명령 등 조치에 협력한다.,CompelledDisclosure,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+공개 범위는 최소화하고 비밀표시를 유지한다.,CompelledDisclosure,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+법적 요구가 있으면 아무 절차 없이 즉시 공개한다.,CompelledDisclosure,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",사전 통지가 금지된 경우 공개 후 지체 없이 통지한다.,
+법적 요구가 있으면 아무 절차 없이 즉시 공개한다. (명시적 제한 부재).,CompelledDisclosure,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",사전 통지가 금지된 경우 공개 후 지체 없이 통지한다.,variant
+사전 통지가 금지된 경우 공개 후 지체 없이 통지한다.,CompelledDisclosure,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+정보 제공만으로 어떠한 권리나 라이선스도 부여되지 않는다.,NoLicense,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+소유권은 제공자에게 유지된다.,NoLicense,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+비밀정보 제공을 사용권 부여로 본다.,NoLicense,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",한정된 샘플·데모에 대해서만 별도 서면으로 제한적 사용권을 부여할 수 있다.,
+비밀정보 제공을 사용권 부여로 본다. (명시적 제한 부재).,NoLicense,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",한정된 샘플·데모에 대해서만 별도 서면으로 제한적 사용권을 부여할 수 있다.,variant
+한정된 샘플·데모에 대해서만 별도 서면으로 제한적 사용권을 부여할 수 있다.,NoLicense,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+개인정보 처리 시 최소수집·가명처리·접근통제를 적용한다.,PersonalData,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+침해 발생 시 72시간 내 통지 및 공동 대응한다.,PersonalData,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+개인정보 이전·처리에 관한 요건을 두지 않는다.,PersonalData,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",역외 이전은 표준계약조항 또는 적정성 결정을 전제로 허용한다.,
+개인정보 이전·처리에 관한 요건을 두지 않는다. (명시적 제한 부재).,PersonalData,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",역외 이전은 표준계약조항 또는 적정성 결정을 전제로 허용한다.,variant
+역외 이전은 표준계약조항 또는 적정성 결정을 전제로 허용한다.,PersonalData,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+상호명·로고·거래사실 공개는 사전 서면동의가 필요하다.,Publicity,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+상호명·로고·거래사실 공개는 사전 서면동의가 필요하다. (필요 시 추가 통제 적용).,Publicity,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+승인 없이 홍보·보도자료에 상대방 상호를 사용할 수 있다.,Publicity,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",법정 공시 범위 내에서 최소한으로 공개한다.,
+승인 없이 홍보·보도자료에 상대방 상호를 사용할 수 있다. (명시적 제한 부재).,Publicity,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",법정 공시 범위 내에서 최소한으로 공개한다.,variant
+법정 공시 범위 내에서 최소한으로 공개한다.,Publicity,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+역분석·분해·디컴파일 및 성능 벤치마크 공개를 금지한다.,ReverseEngineering_Benchmarking,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+역분석·분해·디컴파일 및 성능 벤치마크 공개를 금지한다. (필요 시 추가 통제 적용).,ReverseEngineering_Benchmarking,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+벤치마크 결과를 자유롭게 외부에 공개할 수 있다.,ReverseEngineering_Benchmarking,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",사전 동의하에 내부 평가 목적의 벤치마크만 허용한다.,
+벤치마크 결과를 자유롭게 외부에 공개할 수 있다. (명시적 제한 부재).,ReverseEngineering_Benchmarking,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",사전 동의하에 내부 평가 목적의 벤치마크만 허용한다.,variant
+사전 동의하에 내부 평가 목적의 벤치마크만 허용한다.,ReverseEngineering_Benchmarking,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+상대방 인력에 대한 비유인/채용금지 기간과 범위를 정한다.,NonSolicit_NonHire,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+상대방 인력에 대한 비유인/채용금지 기간과 범위를 정한다. (필요 시 추가 통제 적용).,NonSolicit_NonHire,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+상대방 핵심 인력을 자유롭게 영입할 수 있다.,NonSolicit_NonHire,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",공개채용 및 자발적 지원은 예외로 한다.,
+상대방 핵심 인력을 자유롭게 영입할 수 있다. (명시적 제한 부재).,NonSolicit_NonHire,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",공개채용 및 자발적 지원은 예외로 한다.,variant
+공개채용 및 자발적 지원은 예외로 한다.,NonSolicit_NonHire,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+비밀정보를 이용해 상대 거래를 우회하는 행위를 금지한다.,NonCircumvention,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+비밀정보를 이용해 상대 거래를 우회하는 행위를 금지한다. (필요 시 추가 통제 적용).,NonCircumvention,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+우회 거래에 대한 제한을 두지 않는다.,NonCircumvention,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",우회 거래 발생 시 사전 협의 및 합리적 보상 원칙을 둔다.,
+우회 거래에 대한 제한을 두지 않는다. (명시적 제한 부재).,NonCircumvention,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",우회 거래 발생 시 사전 협의 및 합리적 보상 원칙을 둔다.,variant
+우회 거래 발생 시 사전 협의 및 합리적 보상 원칙을 둔다.,NonCircumvention,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+전자서명 및 분할서명을 유효한 서명으로 인정한다.,ESignature_Counterparts,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+전자서명 및 분할서명을 유효한 서명으로 인정한다. (필요 시 추가 통제 적용).,ESignature_Counterparts,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+전자서명의 효력을 부정한다.,ESignature_Counterparts,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",스캔본 서명은 임시로 인정하고 일정 기간 내 원본 제출을 요구한다.,
+전자서명의 효력을 부정한다. (명시적 제한 부재).,ESignature_Counterparts,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",스캔본 서명은 임시로 인정하고 일정 기간 내 원본 제출을 요구한다.,variant
+스캔본 서명은 임시로 인정하고 일정 기간 내 원본 제출을 요구한다.,ESignature_Counterparts,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+본 계약이 전면 합의이며 변경은 서면에 의해서만 유효하다.,EntireAgreement_Amendment,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+본 계약이 전면 합의이며 변경은 서면에 의해서만 유효하다. (필요 시 추가 통제 적용).,EntireAgreement_Amendment,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+구두 변경도 동일한 효력이 있다고 본다.,EntireAgreement_Amendment,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",주문서/부속서에 한해 전자문서로 변경을 허용한다.,
+구두 변경도 동일한 효력이 있다고 본다. (명시적 제한 부재).,EntireAgreement_Amendment,,recipient,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",주문서/부속서에 한해 전자문서로 변경을 허용한다.,variant
+주문서/부속서에 한해 전자문서로 변경을 허용한다.,EntireAgreement_Amendment,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,
+일부 무효 시 나머지는 유효하며 권리불행사는 포기로 간주하지 않는다.,Severability_Waiver,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,
+일부 무효 시 나머지는 유효하며 권리불행사는 포기로 간주하지 않는다. (필요 시 추가 통제 적용).,Severability_Waiver,,both,NDA,US,article,,,Derived from uploaded NDA refs,2025.08,True,5,"standard,good",,variant
+일부 무효 시 계약 전체가 무효가 된다.,Severability_Waiver,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",무효 조항은 당사자 의도에 가장 가까운 유효 조항으로 대체한다.,
+일부 무효 시 계약 전체가 무효가 된다. (명시적 제한 부재).,Severability_Waiver,,recipient,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,2,"antipattern,bad",무효 조항은 당사자 의도에 가장 가까운 유효 조항으로 대체한다.,variant
+무효 조항은 당사자 의도에 가장 가까운 유효 조항으로 대체한다.,Severability_Waiver,,both,NDA,KR,article,,,Derived from uploaded NDA refs,2025.08,True,4,fallback,,

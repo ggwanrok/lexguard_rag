@@ -1,0 +1,32 @@
+{
+  "version": "2025.08",
+  "core": [
+    "LimitationOfLiability",
+    "Indemnity",
+    "GoverningLaw_Jurisdiction",
+    "Notice",
+    "Assignment",
+    "ForceMajeure"
+  ],
+  "extra": [
+    "Definition_ConfidentialInfo",
+    "UseAndPurpose",
+    "Exclusions",
+    "Term_ReturnDestruction",
+    "InjunctiveRelief",
+    "Residuals",
+    "RecipientSecurity",
+    "PermittedReceivers",
+    "CompelledDisclosure",
+    "NoLicense",
+    "PersonalData",
+    "Publicity",
+    "ReverseEngineering_Benchmarking",
+    "NonSolicit_NonHire",
+    "NonCircumvention",
+    "ESignature_Counterparts",
+    "EntireAgreement_Amendment",
+    "Severability_Waiver",
+    "ThirdPartyBeneficiaries"
+  ]
+}

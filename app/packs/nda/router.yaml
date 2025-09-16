@@ -1,0 +1,5 @@
+recipient::KR: tpl_nda_recipient_kr_v1
+discloser::KR: tpl_nda_discloser_kr_v1
+recipient::US: tpl_nda_recipient_us_v1
+discloser::US: tpl_nda_discloser_us_v1
+default: default_v1

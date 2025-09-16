@@ -1,0 +1,77 @@
+LimitationOfLiability:
+  - 총한도(Fees x N)/간접손해 제외 여부
+  - 예외항목(개인정보, 고의·중과실, IP침해 등) 명시
+  - 상호성/균형성 점검
+Indemnity:
+  - IP침해 면책 범위와 방어권/통제권
+  - 합의권 제한 및 비용 처리
+GoverningLaw_Jurisdiction:
+  - 준거법/재판관할 명확성
+  - 중재/소송 선택과 장소
+Notice:
+  - 통지 수단(이메일 포함 여부)와 유예기간
+  - 변동 통지처 업데이트 절차
+Assignment:
+  - 양도 제한/예외(M&A/계열사)
+ForceMajeure:
+  - 범위 정의와 통지/완화 의무
+
+Definition_ConfidentialInfo:
+  - 표시 요건이 과도하게 좁지 않은가
+  - 구두정보 포함 및 사후 기록猶予
+UseAndPurpose:
+  - 목적 외 사용 금지, 필요한 범위 내 공유
+Exclusions:
+  - 이미 공개된 정보/수신 전 보유 정보 등 예외
+Term_ReturnDestruction:
+  - 보존 예외(법적·백업)와 반환/파기 절차
+InjunctiveRelief:
+  - 금지명령·특별구제 문구
+Residuals:
+  - 잔존지식 예외 허용 범위·역설계 금지
+RecipientSecurity:
+  - 보안수준(관리적/기술적/물리적) 진술
+
+PermittedReceivers:
+  - 공유 가능한 수신자 범위(계열사/자문사/하도급), need-to-know 원칙
+  - 다운스트림 비밀유지 의무(no less protective) 부과
+  - 해외/제3국 이전 시 추가 통제(개인정보 포함 시 별도 요건)
+  - 접근 통제·기록과 목록 업데이트 절차
+CompelledDisclosure:
+  - 법령/명령에 따른 공개 시 사전 서면 통지
+  - 보호명령(Protective Order) 등 합리적 조치 협력
+  - 공개 범위 최소화 및 마스킹/열람 제한
+  - 비밀표시 유지("CONFIDENTIAL" 마킹)
+NoLicense:
+  - 제공 사실만으로 권리/라이선스 부여 아님(명시적·묵시적)
+  - 소유권 귀속(Discloser/제공자 유지)
+  - 피드백/개선 아이디어 처리(선택)
+PersonalData:
+  - 개인정보 포함 여부, 최소수집/가명처리
+  - 역외 이전/제3자 제공 요건 및 통지
+  - 침해 통지 기한(예: 72시간) 및 공동대응
+  - 파기·반환 시 백업/보존 예외 처리
+Publicity:
+  - 상호명/로고/거래사실 공개 금지 및 예외(법정공시)
+  - 레퍼런스 사용 정책(기간·매체·철회권)
+ReverseEngineering_Benchmarking:
+  - 역분석/분해/디컴파일, 성능 벤치마크 공개 금지
+  - 산출물 공개·제3자 제공 제한
+NonSolicit_NonHire:
+  - 비유인/채용금지 기간·대상·영역
+  - 간접유인(헤드헌터·계열사 경유) 금지
+  - 예외(자발적 지원/공개채용)
+NonCircumvention:
+  - 비밀정보를 이용한 거래 상대 우회 금지(직접/간접/제3자 경유)
+  - 위반 시 구제(금지명령/손해배상)
+ESignature_Counterparts:
+  - 전자서명/스캔본 유효
+  - 분할서명(카운터파트) 효력
+EntireAgreement_Amendment:
+  - 전면 합의 조항(통합) 및 구두 변경 배제
+  - 서면/전자 서명에 의한 변경만 유효
+Severability_Waiver:
+  - 일부 무효 시 나머지 유효(분리가능)
+  - 권리불행사 불포기
+ThirdPartyBeneficiaries:
+  - 제3자 권리 부여 부인(명시적 예외 있으면 한정)

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NDA Risk Viewer</title>
+<style>
+  :root { --bg:#0b0c10; --fg:#e6e6e6; --muted:#a8b0b6; --card:#151821; --accent:#7aa2f7; }
+  body { margin:0; font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; background:var(--bg); color:var(--fg); }
+  header { padding:16px 24px; border-bottom:1px solid #222733; position:sticky; top:0; background:rgba(11,12,16,0.9); backdrop-filter: blur(6px); }
+  h1 { margin:0; font-size:18px; }
+  .container { max-width:1120px; margin:0 auto; padding:24px; }
+  .row { display:flex; gap:16px; flex-wrap:wrap; }
+  .col { flex:1 1 420px; }
+  .card { background:var(--card); border:1px solid #222733; border-radius:12px; padding:16px; }
+  textarea { width:100%; min-height:220px; background:#0f121a; color:var(--fg); border:1px solid #283246; border-radius:8px; padding:12px; resize:vertical; }
+  input[type="text"] { width:100%; background:#0f121a; color:var(--fg); border:1px solid #283246; border-radius:8px; padding:10px; }
+  button { background:var(--accent); color:#0b0c10; border:none; border-radius:10px; padding:10px 14px; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:not-allowed; }
+  .toolbar { display:flex; gap:10px; align-items:center; margin-top:10px; }
+  .muted { color:var(--muted); font-size:12px; }
+  .badges { display:flex; gap:8px; flex-wrap:wrap; }
+  .badge { padding:4px 8px; border-radius:999px; font-size:12px; font-weight:600; border:1px solid #364059; }
+  .LOW { background:#14361e; color:#a9f5c5; border-color:#1f5c34; } 
+  .MEDIUM { background:#3b3614; color:#f5e1a9; border-color:#5c4e1f; } 
+  .HIGH { background:#3a1e1e; color:#f5a9a9; border-color:#5c2c2c; } 
+  .CRITICAL { background:#3b1212; color:#ffb4b4; border-color:#6b1d1d; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:10px; border-bottom:1px solid #2a3142; vertical-align:top; }
+  th { color:#b9c2cf; font-weight:700; background:#0f121a; position:sticky; top:0; }
+  details summary { cursor:pointer; color:#bcd3ff; }
+  .grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); }
+  .pill { padding:2px 8px; border-radius:999px; border:1px solid #2a3142; font-size:12px; color:#cbd5e1; }
+  .footer { margin-top:24px; font-size:12px; color:#90a0b8}
+</style>
+</head>
+<body>
+<header>
+  <h1>NDA Risk Analysis Viewer</h1>
+</header>
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div class="card">
+        <label class="muted">API Base URL</label>
+        <input id="baseUrl" type="text" value="http://localhost:8080">
+        <div class="muted" style="margin-top:6px;">분석 서버가 8000에서 실행 중이면 <b>http://localhost:8000</b> 으로 변경하세요.</div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="card">
+        <label class="muted">텍스트 파일 업로드</label>
+        <input id="fileInput" type="file" accept=".txt,.md" style="margin-top:8px;">
+        <div class="muted">또는 아래 텍스트 박스에 직접 붙여넣기</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <textarea id="rawText" placeholder="여기에 OCR 텍스트를 붙여넣거나, 위에서 파일을 선택하세요."></textarea>
+    <div class="toolbar">
+      <select id="jurisdiction">
+        <option value="KR" selected>KR</option>
+        <option value="US">US</option>
+        <option value="EU">EU</option>
+      </select>
+      <select id="contractType">
+        <option value="NDA" selected>NDA</option>
+        <option value="MSA">MSA</option>
+        <option value="SaaS">SaaS</option>
+        <option value="DPA">DPA</option>
+      </select>
+      <input id="contractName" type="text" placeholder="contract_name (선택)">
+      <button id="analyzeBtn">분석 실행</button>
+      <span id="status" class="muted"></span>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="footer">Powered by your FastAPI + Gemini + OpenAI embeddings | Viewer is static (no build needed)</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const riskBadge = (level) => `<span class="badge ${level}">${level}</span>`;
+
+$("fileInput").addEventListener("change", async (e) => {
+  const f = e.target.files[0]; if(!f) return;
+  const txt = await f.text();
+  $("rawText").value = txt;
+});
+
+$("analyzeBtn").addEventListener("click", async () => {
+  const base = $("baseUrl").value.trim().replace(/\/+$/,"");
+  const text = $("rawText").value;
+  if(!text || text.trim().length < 5){
+    alert("텍스트를 입력하거나 파일을 선택하세요."); return;
+  }
+  const juri = $("jurisdiction").value;
+  const ctype = $("contractType").value;
+  const cname = $("contractName").value.trim() || null;
+
+  $("analyzeBtn").disabled = true;
+  $("status").textContent = "분석 중…";
+
+  try {
+    // analyze-text endpoint (text/plain)
+    const resp = await fetch(`${base}/api/v1/contracts/analyze-text?jurisdiction=${encodeURIComponent(juri)}&contract_type=${encodeURIComponent(ctype)}&language=ko&contract_name=${encodeURIComponent(cname||"")}`, {
+      method: "POST",
+      headers: {"Content-Type":"text/plain; charset=utf-8"},
+      body: text
+    });
+    if(!resp.ok){
+      const t = await resp.text();
+      throw new Error(`HTTP ${resp.status}: ${t}`);
+    }
+    const data = await resp.json();
+    renderResults(data);
+    $("status").textContent = "완료";
+  } catch (e){
+    $("status").textContent = "오류";
+    $("results").innerHTML = `<div class="card" style="border-color:#6b1d1d;color:#ffb4b4"><b>에러:</b> ${e.message}</div>`;
+  } finally {
+    $("analyzeBtn").disabled = false;
+  }
+});
+
+function renderResults(res){
+  const r = res.overall_risk_assessment || res.overall || {};
+  const level = (r.risk_level||"LOW").toUpperCase();
+  const score = r.risk_score ?? 0;
+  const factors = r.risk_factors || [];
+  const recs = r.recommendations || [];
+  const summary = res.summary || "";
+
+  let html = `
+    <div class="row" style="margin-top:16px;">
+      <div class="col">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0;">전체 평가</h3>
+          <div class="badges">${riskBadge(level)} <span class="pill">score: ${score}</span></div>
+          <div style="margin-top:10px;">
+            <div class="muted">핵심 위험요소</div>
+            <ul>${factors.map(f=>`<li>${escapeHtml(f)}</li>`).join("") || "<li>-</li>"}</ul>
+            <div class="muted">개선 권고</div>
+            <ul>${recs.map(f=>`<li>${escapeHtml(f)}</li>`).join("") || "<li>-</li>"}</ul>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card">
+          <h3 style="margin:0 0 8px 0;">요약</h3>
+          <pre style="white-space:pre-wrap;margin:0;">${escapeHtml(summary)}</pre>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const clauses = res.clause_analysis || [];
+  html += `
+    <div class="card" style="margin-top:16px;">
+      <h3 style="margin:0 0 8px 0;">조항별 평가 (${clauses.length})</h3>
+      <table>
+        <thead><tr>
+          <th style="width:18%;">조항</th>
+          <th style="width:12%;">위험</th>
+          <th style="width:10%;">점수</th>
+          <th>권고</th>
+          <th style="width:34%;">원문(일부)</th>
+        </tr></thead>
+        <tbody>
+          ${clauses.map(c=>rowClause(c)).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  $("results").innerHTML = html;
+}
+
+function rowClause(c){
+  const ra = c.risk_assessment || {};
+  const level = (ra.risk_level||"LOW").toUpperCase();
+  const score = ra.risk_score ?? 0;
+  const recs = (ra.recommendations||[]).slice(0,3).map(x=>`<li>${escapeHtml(x)}</li>`).join("") || "<li>-</li>";
+  const id = c.original_identifier || c.clause_id;
+  const text = (c.original_text||"").slice(0,180).replace(/\s+/g," ").trim() + ( (c.original_text||"").length>180 ? "…" : "" );
+  return `<tr>
+    <td><b>${escapeHtml(id||"")}</b></td>
+    <td>${riskBadge(level)}</td>
+    <td>${score}</td>
+    <td><ul>${recs}</ul></td>
+    <td><details><summary>보기</summary><div style="margin-top:6px;">${escapeHtml(c.original_text||"")}</div></details></td>
+  </tr>`;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+</script>
+</body>
+</html>

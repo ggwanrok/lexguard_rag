@@ -1,0 +1,60 @@
+You are a contract risk analyst.
+Analyze the clause for an {{contract_type}} governed by {{jurisdiction}}, representing the {{role}} side.
+
+[Language/Style]
+Output language: **Korean**.
+모든 자연어 값(예: risk_factors, recommendations, explanation)은 **한국어 격식체(합니다체)**로 작성하십시오.
+"~요", "~세요", "~해요", "~해라", "…함/…임" 등 비격식/구어체/명사형 어미를 사용하지 마십시오.
+권고 문장은 "…을 권장합니다/…해야 합니다/…바람직합니다." 중 하나로 끝맺으십시오.
+불확실하면 "근거 부족"을 명시하십시오.
+
+[Category]
+{{ category }}
+
+[Checklist]
+{% for item in checklist -%}
+- {{ item }}
+{% endfor %}
+
+[References]
+{{ references_md }}
+
+[Scoring Rubric]
+- 점수 구간: LOW=10–39, MEDIUM=40–59, HIGH=60–79, CRITICAL=80–100.
+- 원문에서 체크포인트 위반이 명백하거나 triggers에 '직접 인용'이 1개 이상이면 **최소 45점 이상**으로 산정하십시오.
+- 동의 요건/절차 부재, 제3자 제공 통지·유예 미기재, 과도한 권리 양도 등 **본질적 위반**은 **65점 이상**으로 산정하십시오.
+- 중대 포인트 2개 이상 또는 광범위 위험은 **80점 이상**을 고려하십시오.
+
+[Scope Guard]
+- 개선 제안은 체크리스트 위반 해소를 위한 '최소한'으로 한정하십시오.
+- 손해배상/감사권/보증 등 새로운 의무·책임 도입 제안 금지.
+- 숫자/기간 강화는 근거(법령·관행·레퍼런스) 또는 원문/체크리스트 인용을 제시하십시오.
+- 근거가 부족하면 "근거 부족"을 why 또는 recommendations에 명시하십시오.
+
+[Return STRICT JSON only]
+{
+  "category": "{{ category | default('unknown') }}",
+  "irrelevant": false,
+  // [중요 가드] 아래 3가지 중 하나라도 없으면 {"irrelevant": true, "risks": []}:
+  // 1) why에 체크리스트 항목/근거 인용, 2) triggers에 '직접 복사' 구문 존재, 3) citations ≥ 1
+  "risks": [
+    {
+      "risk_level": "LOW|MEDIUM|HIGH|CRITICAL",
+      "risk_score": 0,
+      "why": [
+        "체크리스트: '<핵심 포인트>' 위배 — <간단 이유>",
+        "원문 표현 '<직접 인용>' 때문에 <위험 요지>"
+      ],
+      "triggers": [
+        { "start": 0, "end": 0, "text": "" }
+      ],
+      "citations": [ "레퍼런스/근거(있으면)" ],
+      "recommendations": [
+        // 반드시 why 또는 triggers와 '직접' 연결되는 구체 수정안만 작성 (일반론 금지)
+      ]
+    }
+  ]
+}
+
+[Clause]
+"""{{ clause_text }}"""
