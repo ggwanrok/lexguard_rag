@@ -15,12 +15,21 @@ from qdrant_client.models import (
 from app.config import settings
 from app.models.schema import ClauseNormalized, SearchResult
 from app.utils.logger import logger
+from app.services.embedder import EmbedderService
+
 
 class QdrantClient:
     def __init__(self):
         self.client = QClient(url=settings.qdrant_url)
         self.collection = settings.qdrant_collection_name
-        self.vec_dim = settings.embedding_dim
+
+        # 임베더를 여기서 초기화하여 차원을 auto로 가져옴
+        self._embedder = EmbedderService()
+        # 우선순위: env(EMBEDDING_DIM) > 모델 dim 자동 인식
+        self.vec_dim = int(settings.embedding_dim) if settings.embedding_dim > 0 else int(self._embedder.dim or 0)
+        if self.vec_dim <= 0:
+            raise RuntimeError("임베딩 차원을 결정할 수 없습니다. EMBEDDING_DIM을 .env에 설정해 주세요.")
+
         self._ensure_collection()
 
     def _ensure_collection(self):
@@ -32,7 +41,9 @@ class QdrantClient:
                     collection_name=self.collection,
                     vectors_config=VectorParams(size=self.vec_dim, distance=Distance.COSINE),
                 )
-                logger.info(f"Qdrant collection created: {self.collection}")
+                logger.info(f"Qdrant collection created: {self.collection} (dim={self.vec_dim})")
+            else:
+                logger.info(f"Qdrant collection exists: {self.collection}")
         except Exception as e:
             raise RuntimeError(f"Qdrant ensure_collection failed: {e}")
 
