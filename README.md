@@ -13,27 +13,6 @@ OCR을 통해 스캔된 계약서를 텍스트로 변환하고, 벡터 임베딩
 - **리스크 시각화**: 결과 확인  
 - **PDF 보고서 다운로드**
 
-## 시스템 아키텍처
-```mermaid
-flowchart TD
-    A[OCR] --> B[Chunker]
-    B --> C[Embedder]
-    C --> D[Qdrant(Vector DB)]
-    D --> E[Audit Orchestrator]
-    E --> F[LLM Evaluator (1차 분석)]
-    F --> G[Clause Rewriter / Risk Validator (2차 검증)]
-    G --> H[결과 저장 및 시각화 (Viewer, PDF)]
-```
-
-## 폴더 구조
-```
-rag_contract_audit/
-  ├── requirements.txt       # Python 패키지 의존성
-  ├── .env                   # 환경 변수 (API 키, DB 설정 등)
-  ├── nda_risk_viewer.html   # 분석 결과 뷰어
-  ├── rag_contract_audit/    # 핵심 백엔드 모듈
-  └── .qdrant_storage/       # Qdrant 로컬 스토리지
-```
 
 ## 기술 스택
 - **Python 3.10+**

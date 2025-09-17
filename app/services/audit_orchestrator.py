@@ -3,7 +3,7 @@ import asyncio
 import json
 import re
 import time
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Optional
 from jinja2 import Template
 import httpx
 import google.generativeai as genai
@@ -203,6 +203,11 @@ class AuditOrchestrator:
         self.sem = asyncio.Semaphore(getattr(settings, "gemini_concurrency", 4))
         self.request_timeout = getattr(settings, "gemini_timeout_sec", 25)
         self.retriever = RetrieverService()
+
+        # 조항 동시 스케줄 상한(없으면 사실상 무제한 스케줄; LLM 동시성은 self.sem가 제어)
+        self.clause_sem = asyncio.Semaphore(
+            int(getattr(settings, "clause_concurrency", 0)) or 10_000
+        )
 
     # ---------- prompt ----------
     def _render_prompt(self, tpl_text: str, **kw) -> str:
@@ -443,66 +448,99 @@ class AuditOrchestrator:
 
         return _enforce_header(clause_text, revised)
 
-    # -------------------- Orchestrate --------------------
+    # -------------------- Orchestrate (CLAUSE-LEVEL PARALLEL) --------------------
     async def analyze(
         self, cn: ContractNormalized, contract_type: str, jurisdiction: str, role: str
     ) -> Tuple[RiskAssessment, List[ClauseAnalysisItem]]:
-        pack=load_pack(contract_type)
-        tpl_text=pack.prompts["clause_audit"]
-        categories=pack.categories()
+        """
+        조항 단위까지 병렬화:
+          - 각 조항에 대해: RAG → 카테고리 병렬 LLM → 조항 병합 → (선택)개정문/하이라이트
+          - 전역 LLM 동시성은 self.sem으로 제어
+        """
+        pack = load_pack(contract_type)
+        tpl_text = pack.prompts["clause_audit"]
+        categories = pack.categories()
 
-        clause_items: List[ClauseAnalysisItem]=[]
-        all_ra: List[RiskAssessment]=[]
+        async def _process_one_clause(idx: int, cl) -> Tuple[int, Optional[ClauseAnalysisItem], Optional[RiskAssessment]]:
+            # clause-level concurrency limiter (optional)
+            async with self.clause_sem:
+                try:
+                    # 1) RAG (I/O bound)
+                    refs = await self.retriever.retrieve_similar_chunks(
+                        cl.original_text,
+                        top_k=settings.retrieval_top_k,
+                        reference_only=True,
+                        contract_type=contract_type,
+                        jurisdiction=jurisdiction,
+                        clause_type=cl.clause_type,
+                    )
+                    refs_md = PromptBuilder.format_references([r.dict() if hasattr(r, "dict") else r for r in refs])
 
-        t0=time.perf_counter()
-        for cl in cn.clauses:
-            # RAG
-            refs=await self.retriever.retrieve_similar_chunks(
-                cl.original_text, top_k=settings.retrieval_top_k, reference_only=True,
-                contract_type=contract_type, jurisdiction=jurisdiction, clause_type=cl.clause_type)
-            refs_md=PromptBuilder.format_references([r.dict() if hasattr(r,"dict") else r for r in refs])
+                    # 2) 카테고리 병렬 LLM 평가 (세마포어는 _category_audit 안에서 적용)
+                    tasks = [
+                        self._category_audit(
+                            tpl_text, contract_type, jurisdiction, role,
+                            cat, cl.original_text, refs_md
+                        )
+                        for cat in categories
+                    ]
+                    results = await asyncio.gather(*tasks, return_exceptions=False)
+                    cat_results = [r for r in results if r]
 
-            # 카테고리 병렬 호출
-            tasks=[ self._category_audit(tpl_text, contract_type, jurisdiction, role, cat,
-                                         cl.original_text, refs_md)
-                    for cat in categories ]
-            results=await asyncio.gather(*tasks, return_exceptions=False)
-            cat_results=[r for r in results if r]
+                    # 3) 병합/보정
+                    is_purpose = _is_purpose_clause_text(cl.original_text, cl.original_identifier)
+                    ra = self._merge_clause(cat_results, is_purpose=is_purpose)
 
-            # 목적 조항 판정 + 병합
-            is_purpose=_is_purpose_clause_text(cl.original_text, cl.original_identifier)
-            ra=self._merge_clause(cat_results, is_purpose=is_purpose)
-            all_ra.append(ra)
+                    # 4) 개정문 + 하이라이트 스팬
+                    revised_text = await self._rewrite_clause(
+                        contract_type, jurisdiction, role,
+                        cl.original_text, cl.original_identifier, ra, refs_md
+                    )
+                    rev_spans = None
+                    if revised_text:
+                        raw_spans = compute_revised_spans(cl.original_text, revised_text)
+                        filtered = _filter_spans_after_header(revised_text, raw_spans)
+                        major = _select_major_spans(revised_text, filtered)
+                        rev_spans = [DiffSpan(**s) for s in major] if major else None
 
-            # 개정문/형광펜
-            revised_text=await self._rewrite_clause(
-                contract_type, jurisdiction, role, cl.original_text, cl.original_identifier, ra, refs_md)
-            rev_spans=None
-            if revised_text:
-                raw_spans=compute_revised_spans(cl.original_text, revised_text)
-                filtered=_filter_spans_after_header(revised_text, raw_spans)
-                major=_select_major_spans(revised_text, filtered)
-                rev_spans=[DiffSpan(**s) for s in major] if major else None
+                    item = ClauseAnalysisItem(
+                        clause_id=cl.clause_id,
+                        original_identifier=cl.original_identifier,
+                        original_text=cl.original_text,
+                        risk_assessment=ra,
+                        revised_text=revised_text or None,
+                        revised_spans=rev_spans,
+                    )
+                    logger.info(f"[audit] clause={cl.original_identifier or cl.clause_id} cats={len(categories)} -> risks={len(cat_results)}")
+                    return idx, item, ra
 
-            clause_items.append(ClauseAnalysisItem(
-                clause_id=cl.clause_id,
-                original_identifier=cl.original_identifier,
-                original_text=cl.original_text,
-                risk_assessment=ra,
-                revised_text=revised_text or None,
-                revised_spans=rev_spans,
-            ))
-            logger.info(f"[audit] clause={cl.original_identifier or cl.clause_id} cats={len(categories)} -> risks={len(cat_results)}")
+                except Exception as e:
+                    logger.warning(f"[audit] clause failed: {getattr(cl, 'original_identifier', '?')} | {e}")
+                    return idx, None, None
 
-        # overall (UNKNOWN은 0점 반영)
+        t0 = time.perf_counter()
+
+        # ---- 조항 병렬 스케줄 ----
+        clause_tasks = [_process_one_clause(i, cl) for i, cl in enumerate(cn.clauses)]
+        done = await asyncio.gather(*clause_tasks, return_exceptions=False)
+
+        # ---- 결과 정리(원 순서 보존) ----
+        done.sort(key=lambda x: x[0])
+        clause_items: List[ClauseAnalysisItem] = []
+        all_ra: List[RiskAssessment] = []
+        for _, item, ra in done:
+            if item: clause_items.append(item)
+            if ra:   all_ra.append(ra)
+
+        # ---- overall (UNKNOWN은 0점 반영) ----
         if not all_ra:
             overall = RiskAssessment(
-            risk_level="LOW",
-            risk_score=10.0,
-            risk_factors=[],
-            recommendations=[],
-            explanation="No clauses.",
-            citations=[],
+                risk_level="LOW",
+                risk_score=10.0,
+                risk_factors=[],
+                recommendations=[],
+                explanation="No clauses.",
+                citations=[],
             )
         else:
             scores_raw=[(0.0 if ra.risk_level=="UNKNOWN" else float(ra.risk_score)) for ra in all_ra]
