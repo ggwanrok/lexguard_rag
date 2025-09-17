@@ -33,7 +33,7 @@ def _level_from_score(score: float) -> str:
     s = max(0.0, min(100.0, float(score)))
     if s >= 75: return "CRITICAL"
     if s >= 60: return "HIGH"
-    if s >= 40: return "MEDIUM"
+    if s >= 40: return "MEDIUM"  # (필요시 응답 직전 'NORMAL'로 rename 가능)
     return "LOW"
 
 # --- Header lock: '제n조(표제)' 보존 ---
@@ -185,6 +185,30 @@ def _calibrate_score(score: float, *, has_trigger: bool, has_citation: bool, why
         uplifted *= float(getattr(settings, "mid_pull", 0.85))
 
     return max(0.0, min(100.0, uplifted))
+
+# ---- ★ NEW: UNKNOWN/0점 산출물 정리 ----
+def _sanitize_unknown_ra(ra: RiskAssessment) -> RiskAssessment:
+    """
+    0점/UNKNOWN일 때 출력물 최소화:
+    - 추천/요인/인용 제거
+    - 메시지: '지금으로도 충분합니다.' 한 줄만
+    """
+    if not ra:
+        return ra
+    try:
+        score = float(getattr(ra, "risk_score", 0.0))
+    except Exception:
+        score = 0.0
+    if getattr(ra, "risk_level", "UNKNOWN") == "UNKNOWN" or score <= 0.0:
+        return RiskAssessment(
+            risk_level="UNKNOWN",
+            risk_score=0.0,
+            risk_factors=[],
+            recommendations=[_SUFF],
+            explanation="Sufficient as-is.",
+            citations=[],
+        )
+    return ra
 
 # ==================== class ====================
 
@@ -346,17 +370,16 @@ class AuditOrchestrator:
                 citations=[],
             )
 
-        # ZERO-LOCK: 모든 카테고리 추천이 '충분'류 → UNKNOWN/0 고정
+        # ZERO-LOCK: 모든 카테고리 추천이 '충분'류 → UNKNOWN/0 고정 (산출물 최소화로 고정)
         if _decide_unknown(results) and getattr(settings,"unknown_maps_to_zero",True):
-            recs: List[str]=[]
-            expls: List[str]=[]
-            for r in results:
-                for rc in (r.get("recommendations") or []):
-                    if isinstance(rc,str): recs.append(rc.strip())
-                if r.get("explanation"): expls.append(str(r["explanation"]))
-            recs=list(dict.fromkeys(recs))[:5]
-            explanation=("; ".join(recs) if recs else "; ".join(expls))[:500] or "Sufficient as-is."
-            return RiskAssessment("UNKNOWN", 0.0, [], recs or [_SUFF], explanation, [])
+            return RiskAssessment(
+                risk_level="UNKNOWN",
+                risk_score=0.0,
+                risk_factors=[],
+                recommendations=[_SUFF],
+                explanation="Sufficient as-is.",
+                citations=[],
+            )
 
         # 점수 집계(피크/평균 가중)
         scores=sorted([float(r.get("risk_score",0)) for r in results], reverse=True)
@@ -454,7 +477,7 @@ class AuditOrchestrator:
     ) -> Tuple[RiskAssessment, List[ClauseAnalysisItem]]:
         """
         조항 단위까지 병렬화:
-          - 각 조항에 대해: RAG → 카테고리 병렬 LLM → 조항 병합 → (선택)개정문/하이라이트
+          - 각 조항: RAG → 카테고리 병렬 LLM → 병합 → (선택)개정문/하이라이트
           - 전역 LLM 동시성은 self.sem으로 제어
         """
         pack = load_pack(contract_type)
@@ -462,7 +485,6 @@ class AuditOrchestrator:
         categories = pack.categories()
 
         async def _process_one_clause(idx: int, cl) -> Tuple[int, Optional[ClauseAnalysisItem], Optional[RiskAssessment]]:
-            # clause-level concurrency limiter (optional)
             async with self.clause_sem:
                 try:
                     # 1) RAG (I/O bound)
@@ -476,7 +498,7 @@ class AuditOrchestrator:
                     )
                     refs_md = PromptBuilder.format_references([r.dict() if hasattr(r, "dict") else r for r in refs])
 
-                    # 2) 카테고리 병렬 LLM 평가 (세마포어는 _category_audit 안에서 적용)
+                    # 2) 카테고리 병렬 LLM 평가
                     tasks = [
                         self._category_audit(
                             tpl_text, contract_type, jurisdiction, role,
@@ -491,17 +513,22 @@ class AuditOrchestrator:
                     is_purpose = _is_purpose_clause_text(cl.original_text, cl.original_identifier)
                     ra = self._merge_clause(cat_results, is_purpose=is_purpose)
 
-                    # 4) 개정문 + 하이라이트 스팬
-                    revised_text = await self._rewrite_clause(
-                        contract_type, jurisdiction, role,
-                        cl.original_text, cl.original_identifier, ra, refs_md
-                    )
+                    # ★ UNKNOWN/0점 산출물 정리
+                    ra = _sanitize_unknown_ra(ra)
+
+                    # 4) 개정문 + 하이라이트 스팬 (UNKNOWN/0점이면 스킵)
+                    revised_text = ""
                     rev_spans = None
-                    if revised_text:
-                        raw_spans = compute_revised_spans(cl.original_text, revised_text)
-                        filtered = _filter_spans_after_header(revised_text, raw_spans)
-                        major = _select_major_spans(revised_text, filtered)
-                        rev_spans = [DiffSpan(**s) for s in major] if major else None
+                    if ra.risk_level != "UNKNOWN" and float(getattr(ra, "risk_score", 0.0)) > 0.0:
+                        revised_text = await self._rewrite_clause(
+                            contract_type, jurisdiction, role,
+                            cl.original_text, cl.original_identifier, ra, refs_md
+                        )
+                        if revised_text:
+                            raw_spans = compute_revised_spans(cl.original_text, revised_text)
+                            filtered = _filter_spans_after_header(revised_text, raw_spans)
+                            major = _select_major_spans(revised_text, filtered)
+                            rev_spans = [DiffSpan(**s) for s in major] if major else None
 
                     item = ClauseAnalysisItem(
                         clause_id=cl.clause_id,
@@ -532,7 +559,7 @@ class AuditOrchestrator:
             if item: clause_items.append(item)
             if ra:   all_ra.append(ra)
 
-        # ---- overall (UNKNOWN은 0점 반영) ----
+        # ---- overall (UNKNOWN은 0점 반영)
         if not all_ra:
             overall = RiskAssessment(
                 risk_level="LOW",
