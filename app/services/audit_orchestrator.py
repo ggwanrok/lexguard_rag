@@ -219,7 +219,7 @@ class AuditOrchestrator:
         if not settings.gemini_api_key:
             raise ValueError("GEMINI_API_KEY가 설정되어야 합니다.")
         genai.configure(api_key=settings.gemini_api_key)
-        self.model_name = getattr(settings, "gemini_model", "gemini-1.5-pro")
+        self.model_name = getattr(settings, "gemini_model", "gemini-2.5-pro")
         self.model = genai.GenerativeModel(self.model_name)
         self.api_key = settings.gemini_api_key
         self.temperature = getattr(settings, "temperature", 0.1)
