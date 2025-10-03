@@ -35,7 +35,7 @@ class Settings(BaseSettings):
 
     # === LLM (Gemini) ===
     gemini_api_key: Optional[str] = None
-    gemini_model: str = "gemini-2.5-pro"
+    gemini_model: str = "gemini-2.0-flash"
 
     # === Chunking / Retrieval ===
     chunk_size: int = 1200

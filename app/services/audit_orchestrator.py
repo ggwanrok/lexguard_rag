@@ -33,7 +33,7 @@ def _level_from_score(score: float) -> str:
     s = max(0.0, min(100.0, float(score)))
     if s >= 75: return "CRITICAL"
     if s >= 60: return "HIGH"
-    if s >= 40: return "MEDIUM"  # (필요시 응답 직전 'NORMAL'로 rename 가능)
+    if s >= 40: return "MEDIUM"
     return "LOW"
 
 # --- Header lock: '제n조(표제)' 보존 ---
@@ -71,7 +71,6 @@ def _filter_spans_after_header(revised: str, spans: List[Dict]) -> List[Dict]:
     return out
 
 def _select_major_spans(revised: str, spans: List[Dict]) -> List[Dict]:
-    """가독성을 위해 길이 기준으로 상위 n개만 선택(겹침 제거)."""
     if not spans:
         return []
     max_n = int(getattr(settings, "highlight_max_spans", 8))
@@ -88,7 +87,7 @@ def _select_major_spans(revised: str, spans: List[Dict]) -> List[Dict]:
     chosen.sort(key=lambda s: s["start"])
     return chosen
 
-# ---- Recommendation relevance (원문/리스크 맥락과 연결 검사) ----
+# ---- Recommendation relevance ----
 _WORD_RE = re.compile(r"[A-Za-z0-9가-힣_/.-]+")
 def _tokens(text: str) -> set[str]:
     return set(w for w in _WORD_RE.findall((text or "")) if len(w) >= 2)
@@ -110,7 +109,7 @@ def _reco_is_relevant(reco: str, clause_text: str, why: List[str], triggers: Lis
         return False
     return overlap >= min_overlap
 
-# ---- '지금으로도 충분합니다.' 판정(동의어/변형 포함) ----
+# ---- '지금으로도 충분합니다.' 판정 ----
 _SUFF = "지금으로도 충분합니다."
 _SUFF_PATTERNS = [
     r"\A[\"'“”‘’]?\s*지금으로도\s*충분합니다[\.!」']?\s*\Z",
@@ -129,7 +128,7 @@ def _is_sufficient(text: str) -> bool:
     return False
 
 def _decide_unknown(results: List[Dict]) -> bool:
-    """모든 카테고리의 추천이 '충분'류(동의어/변형 포함)일 때 UNKNOWN."""
+    """모든 카테고리가 '충분'류 추천만 내놓았을 때 UNKNOWN."""
     has_any = False
     for r in results or []:
         has_any = True
@@ -138,9 +137,8 @@ def _decide_unknown(results: List[Dict]) -> bool:
             return False
     return has_any
 
-# ---- 목적 조항 식별 + 증거강도 산출 ----
+# ---- 목적/증거강도 ----
 def _is_purpose_clause_text(text: str, original_identifier: str = "") -> bool:
-    """조문 헤더/초반부에 '목적'이 있으면 목적 조항으로 간주."""
     try:
         hdr, _ = _extract_header(text)
     except Exception:
@@ -149,7 +147,6 @@ def _is_purpose_clause_text(text: str, original_identifier: str = "") -> bool:
     return ("목적" in hdr) or ("목적" in head)
 
 def _evidence_strength(results: List[Dict]) -> int:
-    """ev: triggers + citations + (why>=2). 카테고리별 누적."""
     ev = 0
     for r in results or []:
         if r.get("triggers"): ev += 1
@@ -157,7 +154,7 @@ def _evidence_strength(results: List[Dict]) -> int:
         if len(r.get("why") or []) >= 2: ev += 1
     return ev
 
-# ---- Risk score calibration (분포↓ + 편차↑) ----
+# ---- 점수 보정 ----
 def _calibrate_score(score: float, *, has_trigger: bool, has_citation: bool, why_count: int,
                      reco_count: int) -> float:
     base = float(score)
@@ -168,31 +165,23 @@ def _calibrate_score(score: float, *, has_trigger: bool, has_citation: bool, why
     cap  = float(getattr(settings, "risk_uplift_cap", 16.0))
     uplifted = score + min(cap, max(0.0, base - score))
 
-    # Floor(optional)
     if getattr(settings, "risk_floor_enabled", False):
         f2 = float(getattr(settings, "risk_floor_reco2", 45.0))
         f3 = float(getattr(settings, "risk_floor_reco3", 60.0))
         uplifted = max(f3 if reco_count>=3 else (f2 if reco_count>=2 else 0.0), uplifted)
 
-    # Evidence multiplier
     ev = int(has_trigger) + int(has_citation) + (1 if why_count >= 2 else 0)
     if ev <= 0:   uplifted *= float(getattr(settings, "ev_mult_0", 0.60))
     elif ev == 1: uplifted *= float(getattr(settings, "ev_mult_1", 0.80))
     else:         uplifted *= float(getattr(settings, "ev_mult_2plus", 1.00))
 
-    # Mid-band pull
     if 40.0 <= uplifted <= 60.0:
         uplifted *= float(getattr(settings, "mid_pull", 0.85))
 
     return max(0.0, min(100.0, uplifted))
 
-# ---- ★ NEW: UNKNOWN/0점 산출물 정리 ----
+# ---- UNKNOWN 정리(조항 레벨) ----
 def _sanitize_unknown_ra(ra: RiskAssessment) -> RiskAssessment:
-    """
-    0점/UNKNOWN일 때 출력물 최소화:
-    - 추천/요인/인용 제거
-    - 메시지: '지금으로도 충분합니다.' 한 줄만
-    """
     if not ra:
         return ra
     try:
@@ -213,13 +202,13 @@ def _sanitize_unknown_ra(ra: RiskAssessment) -> RiskAssessment:
 # ==================== class ====================
 
 class AuditOrchestrator:
-    """Per-clause × per-category audits using Gemini with packs (taxonomy/checklists)."""
+    """Per-clause × per-category audits using Gemini with packs."""
 
     def __init__(self):
         if not settings.gemini_api_key:
             raise ValueError("GEMINI_API_KEY가 설정되어야 합니다.")
         genai.configure(api_key=settings.gemini_api_key)
-        self.model_name = getattr(settings, "gemini_model", "gemini-2.5-pro")
+        self.model_name = getattr(settings, "gemini_model", "gemini-2.0-flash")
         self.model = genai.GenerativeModel(self.model_name)
         self.api_key = settings.gemini_api_key
         self.temperature = getattr(settings, "temperature", 0.1)
@@ -227,11 +216,7 @@ class AuditOrchestrator:
         self.sem = asyncio.Semaphore(getattr(settings, "gemini_concurrency", 4))
         self.request_timeout = getattr(settings, "gemini_timeout_sec", 25)
         self.retriever = RetrieverService()
-
-        # 조항 동시 스케줄 상한(없으면 사실상 무제한 스케줄; LLM 동시성은 self.sem가 제어)
-        self.clause_sem = asyncio.Semaphore(
-            int(getattr(settings, "clause_concurrency", 0)) or 10_000
-        )
+        self.clause_sem = asyncio.Semaphore(int(getattr(settings, "clause_concurrency", 0)) or 10_000)
 
     # ---------- prompt ----------
     def _render_prompt(self, tpl_text: str, **kw) -> str:
@@ -246,8 +231,10 @@ class AuditOrchestrator:
             return genai.types.GenerationConfig(**base)
 
     def _rest_payload(self, prompt: str) -> Dict:
-        return {"contents":[{"parts":[{"text":prompt}]}],
-                "generationConfig":{"temperature":self.temperature,"maxOutputTokens":self.max_tokens}}
+        return {
+            "contents":[{"parts":[{"text":prompt}]}],
+            "generationConfig":{"temperature":self.temperature,"maxOutputTokens":self.max_tokens}
+        }
 
     async def _genai_generate(self, prompt: str) -> str:
         def _call():
@@ -263,7 +250,8 @@ class AuditOrchestrator:
             data=r.json(); return data["candidates"][0]["content"]["parts"][0]["text"]
 
     async def _generate(self, prompt: str) -> str:
-        try: return await self._genai_generate(prompt)
+        try:
+            return await self._genai_generate(prompt)
         except Exception as e:
             logger.warning(f"[audit] gRPC failed; falling back to REST: {e}")
             return await self._rest_generate(prompt)
@@ -293,7 +281,8 @@ class AuditOrchestrator:
         if s.startswith("```"):
             s=re.sub(r"^```[\w-]*\n","",s); s=re.sub(r"\n```$","",s)
         data=None
-        try: data=json.loads(s)
+        try:
+            data=json.loads(s)
         except Exception:
             m=re.search(r"\{[\s\S]*\}$",s)
             if m:
@@ -309,9 +298,13 @@ class AuditOrchestrator:
             try: return float(x)
             except Exception: return df
 
+        # LLM 원시 레벨/점수 먼저 확보
+        raw_level = str(item.get("risk_level","")).upper().strip()
+        raw_score = _flo(item.get("risk_score", data.get("risk_score",0)))
+
         out={
-            "risk_level": str(item.get("risk_level","LOW")).upper(),
-            "risk_score": _flo(item.get("risk_score", data.get("risk_score",0))),
+            "risk_level": raw_level if raw_level else "LOW",
+            "risk_score": raw_score,
             "risk_factors": list(item.get("risk_factors", data.get("risk_factors") or [])),
             "recommendations": list(item.get("recommendations", data.get("recommendations") or [])),
             "explanation": str(item.get("explanation") or ""),
@@ -337,7 +330,7 @@ class AuditOrchestrator:
                              "note":str(c.get("note",""))})
         if cits: out["citations"]=cits
 
-        # 추천안 품질/연관성 필터
+        # ---------- 추천안 품질/연관성 필터 ----------
         recos_raw=[r for r in (out.get("recommendations") or []) if isinstance(r,str)]
         recos_raw=[r.strip() for r in recos_raw if r.strip() and not _looks_generic(r)]
         relevant=[r for r in recos_raw if _reco_is_relevant(r, clause_text, why, trig)]
@@ -347,7 +340,16 @@ class AuditOrchestrator:
         else:
             out["recommendations"]=[_SUFF]
 
-        # 카테고리 보정(감쇠는 config.score_damping_cat로 이미 포함됨)
+        # ★★★ 핵심: 우리가 [_SUFF]로 결론내면 등급/점수도 즉시 UNKNOWN/0으로 동기화 후 반환
+        if out["recommendations"] == [_SUFF]:
+            out["risk_level"] = "UNKNOWN"
+            out["risk_score"] = 0.0
+            out["risk_factors"] = []
+            out["explanation"] = "Sufficient as-is."
+            out["citations"] = []
+            return out
+
+        # (여기부터는 개선 필요가 있는 케이스만 보정)
         score=max(0.0, min(100.0, float(out.get("risk_score",0))))
         has_trigger=any((isinstance(t,dict) and t.get("text") and t["text"] in clause_text) for t in trig)
         has_citation=bool(cits)
@@ -356,6 +358,15 @@ class AuditOrchestrator:
                                why_count=len(why), reco_count=reco_count)
         out["risk_score"]=score
         out["risk_level"]=_level_from_score(score)
+
+        # 혹시라도 최종이 UNKNOWN이면 동기화
+        if out["risk_level"] == "UNKNOWN":
+            out["risk_score"] = 0.0
+            out["risk_factors"] = []
+            out["recommendations"] = [_SUFF]
+            out["explanation"] = "Sufficient as-is."
+            out["citations"] = []
+
         return out
 
     # -------------------- Merge & Aggregate --------------------
@@ -370,7 +381,7 @@ class AuditOrchestrator:
                 citations=[],
             )
 
-        # ZERO-LOCK: 모든 카테고리 추천이 '충분'류 → UNKNOWN/0 고정 (산출물 최소화로 고정)
+        # 모든 카테고리 추천이 '충분'류 → UNKNOWN 고정
         if _decide_unknown(results) and getattr(settings,"unknown_maps_to_zero",True):
             return RiskAssessment(
                 risk_level="UNKNOWN",
@@ -381,7 +392,7 @@ class AuditOrchestrator:
                 citations=[],
             )
 
-        # 점수 집계(피크/평균 가중)
+        # 점수 집계
         scores=sorted([float(r.get("risk_score",0)) for r in results], reverse=True)
         topn_k=int(getattr(settings,"merge_topn",3))
         w_max=float(getattr(settings,"merge_weight_max",0.65))
@@ -391,7 +402,7 @@ class AuditOrchestrator:
         score=w_max*scores[0]+w_top*mean_topn
         level=_level_from_score(score)
 
-        # 목적 조항 LOW 상한 캡(증거 약할 때만)
+        # 목적 조항 캡
         if is_purpose:
             ev=_evidence_strength(results)
             ev_threshold=int(getattr(settings,"purpose_ev_threshold",1))
@@ -401,7 +412,7 @@ class AuditOrchestrator:
                     score=cap
                     level=_level_from_score(score)
 
-        # 조항 감쇠
+        # 감쇠
         score=max(0.0, min(100.0, score * float(getattr(settings,"score_damping_clause",0.92))))
 
         # 부가정보 병합
@@ -450,14 +461,18 @@ class AuditOrchestrator:
         )
 
         async with self.sem:
-            try: raw=await asyncio.wait_for(self._generate(prompt), timeout=self.request_timeout)
-            except Exception as e: logger.warning(f"[rewrite] failed: {e}"); return ""
+            try:
+                raw=await asyncio.wait_for(self._generate(prompt), timeout=self.request_timeout)
+            except Exception as e:
+                logger.warning(f"[rewrite] failed: {e}")
+                return ""
 
         s=(raw or "").strip()
         if s.startswith("```"):
             s=re.sub(r"^```[\w-]*\n","",s); s=re.sub(r"\n```$","",s)
         data=None
-        try: data=json.loads(s)
+        try:
+            data=json.loads(s)
         except Exception:
             m=re.search(r"\{[\s\S]*\}$",s)
             if m:
@@ -468,18 +483,12 @@ class AuditOrchestrator:
         revised=(data.get("revised") or "").strip()
         if len(revised) < max(20, int(len(clause_text)*float(getattr(settings,"rewrite_min_ratio",0.3)))):
             return ""
-
         return _enforce_header(clause_text, revised)
 
-    # -------------------- Orchestrate (CLAUSE-LEVEL PARALLEL) --------------------
+    # -------------------- Orchestrate --------------------
     async def analyze(
         self, cn: ContractNormalized, contract_type: str, jurisdiction: str, role: str
     ) -> Tuple[RiskAssessment, List[ClauseAnalysisItem]]:
-        """
-        조항 단위까지 병렬화:
-          - 각 조항: RAG → 카테고리 병렬 LLM → 병합 → (선택)개정문/하이라이트
-          - 전역 LLM 동시성은 self.sem으로 제어
-        """
         pack = load_pack(contract_type)
         tpl_text = pack.prompts["clause_audit"]
         categories = pack.categories()
@@ -487,7 +496,7 @@ class AuditOrchestrator:
         async def _process_one_clause(idx: int, cl) -> Tuple[int, Optional[ClauseAnalysisItem], Optional[RiskAssessment]]:
             async with self.clause_sem:
                 try:
-                    # 1) RAG (I/O bound)
+                    # 1) RAG
                     refs = await self.retriever.retrieve_similar_chunks(
                         cl.original_text,
                         top_k=settings.retrieval_top_k,
@@ -498,7 +507,7 @@ class AuditOrchestrator:
                     )
                     refs_md = PromptBuilder.format_references([r.dict() if hasattr(r, "dict") else r for r in refs])
 
-                    # 2) 카테고리 병렬 LLM 평가
+                    # 2) 카테고리 병렬
                     tasks = [
                         self._category_audit(
                             tpl_text, contract_type, jurisdiction, role,
@@ -509,14 +518,14 @@ class AuditOrchestrator:
                     results = await asyncio.gather(*tasks, return_exceptions=False)
                     cat_results = [r for r in results if r]
 
-                    # 3) 병합/보정
+                    # 3) 병합
                     is_purpose = _is_purpose_clause_text(cl.original_text, cl.original_identifier)
                     ra = self._merge_clause(cat_results, is_purpose=is_purpose)
 
-                    # ★ UNKNOWN/0점 산출물 정리
+                    # UNKNOWN 정리(조항 레벨)
                     ra = _sanitize_unknown_ra(ra)
 
-                    # 4) 개정문 + 하이라이트 스팬 (UNKNOWN/0점이면 스킵)
+                    # 4) 개정문/스팬
                     revised_text = ""
                     rev_spans = None
                     if ra.risk_level != "UNKNOWN" and float(getattr(ra, "risk_score", 0.0)) > 0.0:
@@ -529,13 +538,16 @@ class AuditOrchestrator:
                             filtered = _filter_spans_after_header(revised_text, raw_spans)
                             major = _select_major_spans(revised_text, filtered)
                             rev_spans = [DiffSpan(**s) for s in major] if major else None
+                    else:
+                        # 개정안 카드 누락 방지(UNKNOWN)
+                        revised_text = _SUFF
 
                     item = ClauseAnalysisItem(
                         clause_id=cl.clause_id,
                         original_identifier=cl.original_identifier,
                         original_text=cl.original_text,
                         risk_assessment=ra,
-                        revised_text=revised_text or None,
+                        revised_text=revised_text,
                         revised_spans=rev_spans,
                     )
                     logger.info(f"[audit] clause={cl.original_identifier or cl.clause_id} cats={len(categories)} -> risks={len(cat_results)}")
@@ -551,7 +563,7 @@ class AuditOrchestrator:
         clause_tasks = [_process_one_clause(i, cl) for i, cl in enumerate(cn.clauses)]
         done = await asyncio.gather(*clause_tasks, return_exceptions=False)
 
-        # ---- 결과 정리(원 순서 보존) ----
+        # ---- 결과 정리 ----
         done.sort(key=lambda x: x[0])
         clause_items: List[ClauseAnalysisItem] = []
         all_ra: List[RiskAssessment] = []
@@ -559,7 +571,7 @@ class AuditOrchestrator:
             if item: clause_items.append(item)
             if ra:   all_ra.append(ra)
 
-        # ---- overall (UNKNOWN은 0점 반영)
+        # ---- overall ----
         if not all_ra:
             overall = RiskAssessment(
                 risk_level="LOW",
@@ -584,6 +596,8 @@ class AuditOrchestrator:
             factors: List[str]=[]
             recs: List[str]=[]
             for ra in sorted(all_ra, key=lambda x:(0.0 if x.risk_level=="UNKNOWN" else x.risk_score), reverse=True):
+                if ra.risk_level == "UNKNOWN":
+                    continue
                 for f in ra.risk_factors:
                     if f and f not in factors: factors.append(f)
                 for rc in ra.recommendations:
@@ -594,8 +608,8 @@ class AuditOrchestrator:
                 risk_level=level,
                 risk_score=round(overall_score, 1),
                 risk_factors=factors[:5],
-                recommendations=recs[:5],
-                explanation="Aggregated from clause-level assessments.",
+                recommendations=recs[:5] if recs else [_SUFF],
+                explanation="Aggregated from clause-level assessments." if recs else "Sufficient as-is.",
                 citations=[],
             )
 

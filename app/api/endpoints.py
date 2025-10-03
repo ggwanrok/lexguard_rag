@@ -17,7 +17,7 @@ from app.models.schema import (
 from app.services.normalizer import NormalizerService
 from app.services.retriever import RetrieverService
 from app.services.summarizer import SummarizerService
-from app.services.audit_orchestrator import AuditOrchestrator
+from app.services.audit_orchestrator import AuditOrchestrator, _SUFF, _is_sufficient
 from app.utils.logger import logger
 
 router = APIRouter()
@@ -30,6 +30,56 @@ auditor = AuditOrchestrator()
 
 
 # --------------------------- 공통 유틸 ---------------------------
+
+def _force_unknown(ra: RiskAssessment) -> RiskAssessment:
+    """UNKNOWN/0점으로 강제(충분 메시지 포함)."""
+    return RiskAssessment(
+        risk_level="UNKNOWN",
+        risk_score=0.0,
+        risk_factors=[],
+        recommendations=[_SUFF],
+        explanation="Sufficient as-is.",
+        citations=[],
+    )
+
+def _harden_unknown_invariants(resp: ContractAnalysisResponse) -> ContractAnalysisResponse:
+    """
+    백엔드 최종 응답 직전 하드닝:
+    - recommendations가 전부 '충분'류이거나, risk_level이 UNKNOWN이거나, risk_score<=0 이면 → UNKNOWN/0으로 강제 동기화
+    - revised_text가 비어있으면(UNKNOWN 포함) '_SUFF'를 채워 개정안 카드 누락 방지
+    - overall도 동일 규칙 적용(추천이 모두 '충분'이면 [_SUFF]만 남기고 UNKNOWN/0)
+    """
+    hardened_items = []
+    for ci in resp.clause_analysis:
+        ra = ci.risk_assessment
+        recos = ra.recommendations or []
+        all_sufficient = (len(recos) == 0) or all(_is_sufficient(r) for r in recos)
+        if ra.risk_level == "UNKNOWN" or ra.risk_score <= 0.0 or all_sufficient:
+            ra = _force_unknown(ra)
+        # 개정문 누락 방지
+        revised_text = ci.revised_text or _SUFF
+        hardened_items.append(
+            ClauseAnalysisItem(
+                clause_id=ci.clause_id,
+                original_identifier=ci.original_identifier,
+                original_text=ci.original_text,
+                risk_assessment=ra,
+                revised_text=revised_text,
+                revised_spans=ci.revised_spans,
+            )
+        )
+
+    resp.clause_analysis = hardened_items
+
+    # overall 하드닝
+    oa = resp.overall_risk_assessment
+    orec = oa.recommendations or []
+    o_all_sufficient = (len(orec) == 0) or all(_is_sufficient(r) for r in orec)
+    if oa.risk_level == "UNKNOWN" or oa.risk_score <= 0.0 or o_all_sufficient:
+        resp.overall_risk_assessment = _force_unknown(oa)
+
+    return resp
+
 
 def _build_markdown_report(res: ContractAnalysisResponse) -> str:
     """응답을 마크다운 보고서 텍스트로 변환."""
@@ -48,7 +98,6 @@ def _build_markdown_report(res: ContractAnalysisResponse) -> str:
     for c in res.clause_analysis:
         r = c.risk_assessment
         lines.append(f"\n### {c.get('original_identifier', None) or c.clause_id} — {r.risk_level} {r.risk_score}")
-        # 왜/권고(있으면 상위 4개)
         why = getattr(r, "why", None)
         if why:
             lines.append("**Why**")
@@ -76,19 +125,19 @@ async def _analyze_core(request: ContractUploadRequest) -> ContractAnalysisRespo
             "subject": request.subject,
             "version": request.version,
             "source_uri": request.source_uri,
-            "is_reference": False,  # 사용자 입력은 항상 False
+            "is_reference": False,
         },
     )
 
-    # 2) Analyze (NDA-first via packs)
+    # 2) Analyze
     ctype = request.contract_type or "NDA"
     juri = request.jurisdiction or "KR"
-    role = "recipient"  # 필요 시 노출
+    role = "recipient"
     overall, clause_items = await auditor.analyze(
         cn, contract_type=ctype, jurisdiction=juri, role=role
     )
 
-    # 3) Summarize (OpenAI)
+    # 3) Summarize
     try:
         summary = await summarizer.generate_summary([ci.model_dump() for ci in clause_items])
     except Exception:
@@ -100,7 +149,7 @@ async def _analyze_core(request: ContractUploadRequest) -> ContractAnalysisRespo
             + "\n".join(f"- {r}" for r in overall.recommendations)
         )
 
-    # 4) Build response
+    # 4) Build response + 최종 하드닝
     resp = ContractAnalysisResponse(
         contract_id=cn.contract_id,
         contract_name=request.contract_name,
@@ -110,6 +159,8 @@ async def _analyze_core(request: ContractUploadRequest) -> ContractAnalysisRespo
         summary=summary,
         normalized=cn,
     )
+    resp = _harden_unknown_invariants(resp)
+
     logger.info(
         f"analyze ok | contract_id={cn.contract_id} clauses={len(cn.clauses)}"
     )
@@ -190,7 +241,7 @@ async def analyze_file(
 ):
     """
     multipart/form-data 파일 업로드로 분석.
-    (TXT/MD 등 텍스트 파일을 권장; PDF는 사전 OCR로 텍스트를 뽑아 전달)
+    (TXT/MD 등 텍스트 파일 권장)
     """
     try:
         raw = (await file.read()).decode("utf-8", "ignore")
@@ -213,7 +264,7 @@ async def analyze_file(
         logger.exception(f"analyze-file failed | error_id={err_id}")
         raise HTTPException(
             status_code=500,
-            detail=f"분석 처리 중 오류가 발생했습니다. 오류코드: {err_id}",
+            detail=f"파일 분석 중 오류가 발생했습니다. 오류코드: {err_id}",
         )
 
 
