@@ -97,7 +97,9 @@ def _build_markdown_report(res: ContractAnalysisResponse) -> str:
     lines.append("\n## Clause Details")
     for c in res.clause_analysis:
         r = c.risk_assessment
-        lines.append(f"\n### {c.get('original_identifier', None) or c.clause_id} — {r.risk_level} {r.risk_score}")
+        # original_identifier가 있으면 그걸 쓰고, 없으면 clause_id
+        ident = getattr(c, "original_identifier", None) or c.clause_id
+        lines.append(f"\n### {ident} — {r.risk_level} {r.risk_score}")
         why = getattr(r, "why", None)
         if why:
             lines.append("**Why**")
