@@ -1,0 +1,23 @@
+text,category,subcategory,role_applicability,contract_type,jurisdiction,clause_type,identifier,title,source,version,is_reference,quality,tags,recommended_language,notes
+"배상책임의 총한도는 최근 12개월간 지급한 금액을 초과하지 않으며, 간접·특별·결과적 손해는 제외한다. 개인(또는 개인정보 침해), 고의 또는 중과실, 지식재산권 침해에는 이 한도가 적용되지 않는다.",LimitationOfLiability,,both,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,"standard,good",ko,
+수신자는 본 계약과 관련하여 발생하는 모든 손해에 대하여 무제한의 배상책임을 부담한다.,LimitationOfLiability,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,"risky,poison",ko,"상한·예외 부재, 일방책임"
+"수신자는 수신자의 위반으로 인해 제3자가 제기하는 합리적으로 예측 가능한 손해·청구에 대하여 공개자를 면책한다. 공개자는 방어권·통제권을 보유하며, 수신자는 합리적 비용을 부담한다.",Indemnity,BreachIndemnity,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,4,balanced,ko,범위/통제권 명시
+수신자는 공개자와 그 계열사가 주장하는 모든 손해·비용·변호사 비용을 무조건적으로 면책한다.,Indemnity,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,"risky,open-ended",ko,무제한·모호
+"천재지변, 전쟁, 정부규제 등 불가항력 사유로 인한 이행지연 또는 불이행은 그 기간 동안 책임이 면제된다. 당사자는 가능한 한 신속히 통지하고 피해를 최소화하기 위해 합리적 노력을 기울인다.",ForceMajeure,,both,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,standard,ko,
+불가항력 여부와 관계없이 수신자는 지연이나 불이행에 대한 모든 책임을 진다.,ForceMajeure,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,1,"risky,poison",ko,면책 부재
+"수신자는 관리적·기술적·물리적 보호조치를 포함한 합리적 보안수준을 유지하며, 침해 발생 시 지체 없이 공개자에게 통지한다.",RecipientSecurity,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,"standard,good",ko,
+수신자는 일반적인 관행에 비추어 적절하다고 판단되는 범위에서만 비밀정보를 보호한다.,RecipientSecurity,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,3,ambiguous,ko,수준 불명확
+"수신자는 계열사·법률/회계 자문사 및 필요 최소 인원에 한해 공유할 수 있으며, 동등 이상의 비밀유지의무를 서면으로 부과한다.",PermittedReceivers,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,standard,ko,
+수신자는 내부 직원에게 자유롭게 공유할 수 있다.,PermittedReceivers,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,"risky,overbroad",ko,범위 과도
+"법령 또는 법원·기관의 요구에 따른 공개가 필요한 경우, 수신자는 허용되는 범위 내에서 사전 서면 통지하고 보호명령 등 합리적 조치에 협력한다.",CompelledDisclosure,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,standard,ko,
+법령상 공개가 필요하면 수신자는 즉시 공개하며 공개자에게 통지할 의무는 없다.,CompelledDisclosure,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,"risky,no-notice",ko,
+"비밀정보에 개인정보가 포함되는 경우, 관련 법령을 준수하고, 국외 이전 시 공개자의 사전 서면 동의를 받는다.",PersonalData,,both,NDA,KR,article,,,LexGuard-Boost,2025.10,True,4,privacy,ko,
+개인정보가 포함되더라도 본 계약에 우선하여 자유롭게 처리할 수 있다.,PersonalData,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,1,"risky,non-compliant",ko,법 위반 가능성
+수신자는 비밀정보의 리버스 엔지니어링·디컴파일·분해를 하지 않는다. 성능평가나 벤치마킹 결과의 공개는 공개자의 사전 서면 동의가 있는 경우에만 가능하다.,ReverseEngineering_Benchmarking,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,standard,ko,
+리버스 엔지니어링 및 벤치마킹 결과의 공개는 허용된다.,ReverseEngineering_Benchmarking,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,risky,ko,
+당사자는 계약기간 및 종료 후 12개월 동안 상대방의 핵심 인력을 유인·채용하지 않는다(상호 예외 합의 가능).,NonSolicit_NonHire,,both,NDA,KR,article,,,LexGuard-Boost,2025.10,True,4,balanced,ko,
+수신자는 계약기간과 무관하게 공개자의 임직원을 채용하지 않는다.,NonSolicit_NonHire,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,"risky,overbroad",ko,기간·범위 과도
+"수신자는 공개자가 소개한 거래상대방과의 직접 거래를 회피하지 않으며, 필요한 경우 공개자의 사전 동의를 받는다.",NonCircumvention,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,4,common,ko,
+수신자는 공개자가 소개한 상대방과 자유롭게 직접 거래할 수 있다.,NonCircumvention,,recipient,NDA,KR,article,,,LexGuard-Boost,2025.10,True,2,risky,ko,
+본 계약은 당사자 이외의 제3자에게 권리를 부여하지 않는다.,ThirdPartyBeneficiaries,,both,NDA,KR,article,,,LexGuard-Boost,2025.10,True,5,"standard,boilerplate",ko,
+"공개자의 계열사, 대리인 및 파트너는 본 계약의 제3수익자가 된다.",ThirdPartyBeneficiaries,,discloser,NDA,KR,article,,,LexGuard-Boost,2025.10,True,3,one-sided,ko,

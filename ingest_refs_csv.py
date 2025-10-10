@@ -64,12 +64,18 @@ def _row_to_clause_and_meta(row: pd.Series):
     }
     return clause, meta
 
-async def ingest_csv(csv_path: str, batch: int = 128, use_batch_upsert: bool = False):
+async def ingest_csv(csv_path: str, batch: int = 128, use_batch_upsert: bool = False, reset: bool = False):
     df = pd.read_csv(csv_path)
     _ensure_cols(df)
 
     embedder = EmbedderService()
     qdrant = QdrantClient()
+    
+    # --reset 옵션: 기존 컬렉션 삭제 후 재생성
+    if reset:
+        print(f"🗑️  Resetting collection '{qdrant.collection}'...")
+        await qdrant.reset_collection()
+        print("✅ Collection reset complete.")
 
     clauses: List[ClauseNormalized] = []
     metas: List[dict] = []
@@ -117,8 +123,10 @@ async def ingest_csv(csv_path: str, batch: int = 128, use_batch_upsert: bool = F
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python ingest_refs_csv.py <csv_path> [--batch-upsert]")
+        print("Usage: python ingest_refs_csv.py <csv_path> [--batch-upsert] [--reset]")
+        print("  --reset: 기존 컬렉션을 삭제하고 새로 시작합니다")
         sys.exit(1)
     csv = sys.argv[1]
     use_batch = ("--batch-upsert" in sys.argv[2:])
-    asyncio.run(ingest_csv(csv, use_batch_upsert=use_batch))
+    reset = ("--reset" in sys.argv[2:])
+    asyncio.run(ingest_csv(csv, use_batch_upsert=use_batch, reset=reset))

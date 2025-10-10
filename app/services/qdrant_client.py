@@ -47,6 +47,25 @@ class QdrantClient:
         except Exception as e:
             raise RuntimeError(f"Qdrant ensure_collection failed: {e}")
 
+    async def reset_collection(self):
+        """기존 컬렉션을 삭제하고 새로 생성합니다."""
+        def _reset():
+            try:
+                # 기존 컬렉션 삭제
+                self.client.delete_collection(collection_name=self.collection)
+                logger.info(f"Deleted collection: {self.collection}")
+            except Exception as e:
+                logger.warning(f"Collection deletion failed (may not exist): {e}")
+            
+            # 새 컬렉션 생성
+            self.client.create_collection(
+                collection_name=self.collection,
+                vectors_config=VectorParams(size=self.vec_dim, distance=Distance.COSINE),
+            )
+            logger.info(f"Created new collection: {self.collection} (dim={self.vec_dim})")
+        
+        await asyncio.to_thread(_reset)
+
     async def upsert_clauses(
         self,
         contract_id: str,

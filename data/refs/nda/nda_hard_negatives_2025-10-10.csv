@@ -1,0 +1,11 @@
+text,category,subcategory,role_applicability,contract_type,jurisdiction,clause_type,identifier,title,source,version,is_reference,quality,tags,recommended_language,notes
+수신자는 목적 수행에 필요한 범위 내에서만 비밀정보를 사용한다.,Use_Purpose,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,5,standard,ko,anchor
+수신자는 목적 수행 범위를 넘어 비밀정보를 사용할 수 있다.,Use_Purpose,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,1,"risky,near-duplicate",ko,hard-negative
+사전 서면 통지 후 보호명령 등 합리적 조치를 모색한다.,CompelledDisclosure,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,5,standard,ko,anchor
+사전 서면 통지는 불요하며 보호명령 협력도 요구되지 않는다.,CompelledDisclosure,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,1,"risky,near-duplicate",ko,hard-negative
+총한도는 최근 12개월 지급액으로 제한한다.,LimitationOfLiability,,both,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,5,standard,ko,anchor
+배상책임에는 어떠한 상한도 적용되지 않는다.,LimitationOfLiability,,both,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,1,"risky,near-duplicate",ko,hard-negative
+비밀정보는 반환 또는 영구 파기 후 그 사실을 서면으로 확인한다.,Return_Destruction,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,5,standard,ko,anchor
+비밀정보의 사본은 내부 참조를 위해 영구 보관할 수 있다.,Return_Destruction,,recipient,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,1,"risky,near-duplicate",ko,hard-negative
+당사자는 상대방의 사전 서면 동의 없이 권리·의무를 양도할 수 없다.,Assignment,,both,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,4,balanced,ko,anchor
+공개자는 동의 없이 자유롭게 양도할 수 있다.,Assignment,,both,NDA,KR,article,,,LexGuard-Boost+,2025.10,True,2,"risky,near-duplicate",ko,hard-negative
