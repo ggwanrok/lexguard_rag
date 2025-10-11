@@ -31,33 +31,98 @@ auditor = AuditOrchestrator()
 
 # --------------------------- 공통 유틸 ---------------------------
 
-def _force_unknown(ra: RiskAssessment) -> RiskAssessment:
-    """UNKNOWN/0점으로 강제(충분 메시지 포함)."""
+def _is_sufficient_text(txt: Optional[str]) -> bool:
+    if not txt:
+        return False
+    t = (txt or "").strip().lower()
+    # 기본: 오케스트레이터의 판단기를 우선 사용
+    if _is_sufficient(txt):
+        return True
+    # 방어적 추가 매칭(영/한 변형)
+    suff_variants = {
+        _SUFF.strip().lower(),
+        "sufficient as-is.",
+        "sufficient as-is",
+        "sufficient as is",
+        "as is sufficient",
+        "현 상태로 충분합니다.",
+        "현 상태로 충분합니다",
+        "현 상태로 충분",
+        "충분합니다.",
+        "충분합니다",
+    }
+    return t in suff_variants
+
+def _force_sufficient_only(ra: RiskAssessment) -> RiskAssessment:
+    """LOW/UNKNOWN 레벨에서 '충분'류가 존재할 때, 모든 조언 제거 후 '충분'만 1개 남김."""
     return RiskAssessment(
-        risk_level="UNKNOWN",
-        risk_score=0.0,
-        risk_factors=[],
-        recommendations=[_SUFF],
-        explanation="Sufficient as-is.",
-        citations=[],
+        risk_level=ra.risk_level,
+        risk_score=ra.risk_score,
+        risk_factors=ra.risk_factors or [],
+        recommendations=[_SUFF],  # 충분 메시지 한 줄만
+        explanation=None if _is_sufficient_text(getattr(ra, "explanation", None)) else getattr(ra, "explanation", None),
+        citations=ra.citations or [],
     )
 
-def _harden_unknown_invariants(resp: ContractAnalysisResponse) -> ContractAnalysisResponse:
+def _strip_sufficient_everywhere(ra: RiskAssessment) -> RiskAssessment:
+    """MEDIUM/HIGH/CRITICAL 등에서 충분류 문구를 모든 필드에서 제거."""
+    # 1) 추천
+    recos = [r for r in (ra.recommendations or []) if not _is_sufficient_text(r)]
+    # 2) 설명
+    expl = getattr(ra, "explanation", None)
+    if _is_sufficient_text(expl):
+        expl = None
+    # 3) why(있을 경우)
+    why = getattr(ra, "why", None)
+    if isinstance(why, list):
+        why = [w for w in why if not _is_sufficient_text(w)]
+    # 4) risk_factors(혹시 충분류가 섞여 있으면 제거)
+    rfs = [f for f in (ra.risk_factors or []) if not _is_sufficient_text(f)]
+
+    new_ra = RiskAssessment(
+        risk_level=ra.risk_level,
+        risk_score=ra.risk_score,
+        risk_factors=rfs,
+        recommendations=recos,
+        explanation=expl,
+        citations=ra.citations or [],
+    )
+    # 선택 필드(why)가 모델에 존재한다면 다시 달아줌
+    try:
+        setattr(new_ra, "why", why)
+    except Exception:
+        pass
+    return new_ra
+
+def _harden_sufficient_policy(resp: ContractAnalysisResponse) -> ContractAnalysisResponse:
     """
-    백엔드 최종 응답 직전 하드닝:
-    - recommendations가 전부 '충분'류이거나, risk_level이 UNKNOWN이거나, risk_score<=0 이면 → UNKNOWN/0으로 강제 동기화
-    - revised_text가 비어있으면(UNKNOWN 포함) '_SUFF'를 채워 개정안 카드 누락 방지
-    - overall도 동일 규칙 적용(추천이 모두 '충분'이면 [_SUFF]만 남기고 UNKNOWN/0)
+    하드닝 정책(요청사항 정확 반영):
+    - 충분류가 하나라도 존재할 때:
+        * risk_level ∈ {LOW, UNKNOWN} → 기존 조언 모두 제거하고 '충분' 한 줄만 남김
+        * 그 외 레벨(MEDIUM/HIGH/CRITICAL) → 충분류 문구를 추천/설명/why/리스크요인 등 전 필드에서 제거
+    - 충분류가 없으면 변경 없음
+    - revised_text가 비어있으면 '_SUFF'로 보강
     """
     hardened_items = []
     for ci in resp.clause_analysis:
         ra = ci.risk_assessment
-        recos = ra.recommendations or []
-        all_sufficient = (len(recos) == 0) or all(_is_sufficient(r) for r in recos)
-        if ra.risk_level == "UNKNOWN" or ra.risk_score <= 0.0 or all_sufficient:
-            ra = _force_unknown(ra)
-        # 개정문 누락 방지
-        revised_text = ci.revised_text or _SUFF
+        # 충분류 존재 여부는 추천/설명/why/리스크요인 전반에서 탐지
+        has_sufficient = any([
+            any(_is_sufficient_text(r) for r in (ra.recommendations or [])),
+            _is_sufficient_text(getattr(ra, "explanation", None)),
+            any(_is_sufficient_text(w) for w in (getattr(ra, "why", None) or [])) if isinstance(getattr(ra, "why", None), list) else False,
+            any(_is_sufficient_text(f) for f in (ra.risk_factors or [])),
+        ])
+
+        if has_sufficient:
+            level = (ra.risk_level or "").upper()
+            if level in ("LOW", "UNKNOWN"):
+                ra = _force_sufficient_only(ra)
+            else:
+                ra = _strip_sufficient_everywhere(ra)
+
+        revised_text = ci.revised_text or _SUFF  # 카드 누락 방지
+
         hardened_items.append(
             ClauseAnalysisItem(
                 clause_id=ci.clause_id,
@@ -68,15 +133,24 @@ def _harden_unknown_invariants(resp: ContractAnalysisResponse) -> ContractAnalys
                 revised_spans=ci.revised_spans,
             )
         )
-
     resp.clause_analysis = hardened_items
 
-    # overall 하드닝
+    # Overall도 동일 정책 적용
     oa = resp.overall_risk_assessment
-    orec = oa.recommendations or []
-    o_all_sufficient = (len(orec) == 0) or all(_is_sufficient(r) for r in orec)
-    if oa.risk_level == "UNKNOWN" or oa.risk_score <= 0.0 or o_all_sufficient:
-        resp.overall_risk_assessment = _force_unknown(oa)
+    has_sufficient_overall = any([
+        any(_is_sufficient_text(r) for r in (oa.recommendations or [])),
+        _is_sufficient_text(getattr(oa, "explanation", None)),
+        any(_is_sufficient_text(w) for w in (getattr(oa, "why", None) or [])) if isinstance(getattr(oa, "why", None), list) else False,
+        any(_is_sufficient_text(f) for f in (oa.risk_factors or [])),
+    ])
+    if has_sufficient_overall:
+        olevel = (oa.risk_level or "").upper()
+        if olevel in ("LOW", "UNKNOWN"):
+            resp.overall_risk_assessment = _force_sufficient_only(oa)
+        else:
+            resp.overall_risk_assessment = _strip_sufficient_everywhere(oa)
+    else:
+        resp.overall_risk_assessment = oa
 
     return resp
 
@@ -97,7 +171,6 @@ def _build_markdown_report(res: ContractAnalysisResponse) -> str:
     lines.append("\n## Clause Details")
     for c in res.clause_analysis:
         r = c.risk_assessment
-        # original_identifier가 있으면 그걸 쓰고, 없으면 clause_id
         ident = getattr(c, "original_identifier", None) or c.clause_id
         lines.append(f"\n### {ident} — {r.risk_level} {r.risk_score}")
         why = getattr(r, "why", None)
@@ -148,7 +221,7 @@ async def _analyze_core(request: ContractUploadRequest) -> ContractAnalysisRespo
             + "Key risks: "
             + (", ".join(overall.risk_factors) if overall.risk_factors else "-")
             + "\n"
-            + "\n".join(f"- {r}" for r in overall.recommendations)
+            + "\n".join(f"- {r}" for r in (overall.recommendations or []))
         )
 
     # 4) Build response + 최종 하드닝
@@ -161,7 +234,7 @@ async def _analyze_core(request: ContractUploadRequest) -> ContractAnalysisRespo
         summary=summary,
         normalized=cn,
     )
-    resp = _harden_unknown_invariants(resp)
+    resp = _harden_sufficient_policy(resp)
 
     logger.info(
         f"analyze ok | contract_id={cn.contract_id} clauses={len(cn.clauses)}"
