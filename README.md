@@ -9,7 +9,7 @@
 - **Normalizer**: 원문을 조항 단위로 분리·정규화.
 - **Retriever (Qdrant)**: 임베딩 기반 유사도 검색으로 관련 레퍼런스 스니펫 제공.
 - **Audit Orchestrator (Gemini)**: 카테고리별 점검 → 점수/등급 보정 및 병합 → 조항 리스크 산출.
-- **Rewriter**: 실질적 권장안이 있을 때만 개정문 생성, 표제(“제 n 조 …”) 강제 보존, diff span 산출.
+- **Rewriter**: 실질적 권장안이 있을 때, 개정문 생성, diff span 산출.
 - **Summarizer**: 전체 요약 및 리포트 텍스트 생성.
 - **API (FastAPI)**: JSON/Markdown/Plain 응답, 파일 업로드/생텍스트 분석 지원.
 
