@@ -3,7 +3,6 @@
 ## 개요
 이 프로젝트는 계약서를 조항 단위로 정규화한 뒤, 사전 구축한 레퍼런스(참조 스니펫)와의 유사도 검색(RAG)을 거쳐 LLM으로 위험 신호를 진단하고 개선문을 제안하는 시스템입니다.  
 최종 응답은 **조항별 리스크 등급/점수, 권장안, 개정문 및 diff 하이라이트, 전체 요약**을 포함합니다.  
-추천안이 모두 “지금으로도 충분합니다.” 류로 판정되면 해당 조항은 **UNKNOWN / 0.0**으로 하드닝되어 불필요한 수정을 제안하지 않습니다.
 
 ## 아키텍처 개요
 - **Normalizer**: 원문을 조항 단위로 분리·정규화.
@@ -27,5 +26,5 @@
 - **FastAPI** (REST API)
 - **Qdrant** (Vector DB)
 - **Embeddings**: Hugging Face kakao1513/KURE-legal-ft-v1
-- **LLM**: Google **Gemini** (기본: `gemini-2.0-flash`)
+- **LLM**: Google **Gemini**
 - **Pandas**(CSV ingest), **Jinja2**(프롬프트 템플릿)
