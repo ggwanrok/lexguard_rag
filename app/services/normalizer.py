@@ -5,7 +5,7 @@ from app.models.schema import ClauseNormalized, ContractNormalized
 from app.utils.logger import logger
 
 ARTICLE_RE = re.compile(r"(?m)^\s*((제\s*\d+\s*조)|(Section\s*\d+(\.\d+)*))\s*(\(([^)]*)\))?")
-PARA_RE = re.compile(r"(제\s*\d+\s*항)")
+PARA_RE = re.compile(r"(제\\s*\\d+\\s*항)")
 ITEM_RE = re.compile(r"^\\s*(\\d+\\.|[가-힣]\\.\\s*|[a-zA-Z]\\.\\s*)", re.MULTILINE)
 
 class NormalizerService:
@@ -13,7 +13,7 @@ class NormalizerService:
 
     def _clean(self, s: str) -> str:
         # 불필요 공백/줄바꿈 정리
-        return re.sub(r"\s+", " ", s).strip()
+        return re.sub(r"\\s+", " ", s).strip()
 
     def normalize(self, raw_text: str, contract_id: Optional[str], meta: dict) -> ContractNormalized:
         text = raw_text or ""
